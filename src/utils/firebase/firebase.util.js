@@ -21,12 +21,12 @@ import {
 } from "firebase/firestore";
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDtrEClFYrtnzGIoePjnqo7D2JXcgxx3bE",
-  authDomain: "crwn-clothing-db-538e8.firebaseapp.com",
-  projectId: "crwn-clothing-db-538e8",
-  storageBucket: "crwn-clothing-db-538e8.appspot.com",
-  messagingSenderId: "709010002145",
-  appId: "1:709010002145:web:da6090a160d64c4b51e7a0",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
@@ -61,12 +61,13 @@ export const getCategoriesAndDocuments = async () => {
   const q = query(collectionRef);
   const querySnapshot = await getDocs(q);
 
-  const categoryMap = querySnapshot.docs.reduce((acc, doc) => {
-    const { title, items } = doc.data();
-    acc[title.toLowerCase()] = items;
-    return acc;
-  }, {});
-  return categoryMap;
+  return querySnapshot.docs.map((docSnapshot) => docSnapshot.data());
+  // .reduce((acc, doc) => {
+  //   const { title, items } = doc.data();
+  //   acc[title.toLowerCase()] = items;
+  //   return acc;
+  // }, {});
+  // return categoryMap;
 };
 
 export const createUserDocumentFromAuth = async (user, additionalInfo = {}) => {
@@ -88,7 +89,7 @@ export const createUserDocumentFromAuth = async (user, additionalInfo = {}) => {
       console.log("error creating the user", error.message);
     }
   }
-  return userDoc;
+  return userData;
 };
 
 export const createAuthUserWithEmailAndPassword = async (email, password) => {
@@ -109,4 +110,17 @@ export const signOutUser = async () => {
 
 export const onAuthStateChangedListener = (callback) => {
   return onAuthStateChanged(auth, callback);
+};
+
+export const getCurrentUser = () => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (userAuth) => {
+        unsubscribe();
+        resolve(userAuth);
+      },
+      reject
+    );
+  });
 };
